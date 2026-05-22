@@ -813,11 +813,17 @@ let userAnswers    = {};
 let reconnectTimer = null;
 let reconnectCount = 0;
 
-// ✅ ВАЖНОЕ ИЗМЕНЕНИЕ — автоматически определяем адрес сервера
+// НОВЫЙ КОД — вставь это
 function getWsUrl() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const hostname = window.location.hostname || 'localhost';
-    // Python WebSocket сервер работает на порту 8765
+    const hostname  = window.location.hostname;
+
+    // На хостинге (Render, Railway и тд) — WebSocket через путь /ws
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return `${protocol}//${hostname}/ws`;
+    }
+
+    // Локально — отдельный порт
     return `${protocol}//${hostname}:8765`;
 }
 

@@ -1,7 +1,6 @@
 # server.py — WebSocket + HTTP сервер на Python
 
 import asyncio
-import websockets
 import json
 import uuid
 import html
@@ -319,13 +318,169 @@ async def cors_middleware(request, handler):
 # ЗАПУСК СЕРВЕРОВ
 # =============================================
 
+# ===== ОТДАЧА HTML ФАЙЛОВ =====
+
+async def serve_index(request):
+    """Главная страница"""
+    filepath = os.path.join(os.path.dirname(__file__), 'index.html')
+    if not os.path.exists(filepath):
+        raise web.HTTPNotFound()
+    return web.FileResponse(filepath)
+
+
+async def serve_file(request):
+    """Отдаём HTML файлы"""
+    filename = request.match_info.get('filename', 'index.html')
+
+    # Безопасность — только разрешённые файлы
+    allowed = ['index.html', 'admin.html']
+    if filename not in allowed:
+        raise web.HTTPNotFound()
+
+    filepath = os.path.join(os.path.dirname(__file__), filename)
+    if not os.path.exists(filepath):
+        raise web.HTTPNotFound()
+
+    return web.FileResponse(filepath)
+
+
+# ===== WEBSOCKET ЧЕРЕЗ HTTP /ws =====
+
+async def websocket_handler(request):
+    """WebSocket через HTTP путь — работает на любом хостинге"""
+
+    ws = web.WebSocketResponse(heartbeat=30)
+    await ws.prepare(request)
+
+    # Получаем IP
+    ip = (
+        request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+        or request.remote
+        or 'unknown'
+    )
+
+    # Rate limit
+    if not check_rate_limit(ip):
+        await ws.close()
+        return ws
+
+    # Создаём сессию
+    session_id = str(uuid.uuid4())
+    clients[session_id] = {
+        'websocket':    ws,
+        'ip':           ip,
+        'answers':      {},
+        'branch':       '',
+        'connected_at': datetime.now().isoformat()
+    }
+
+    await db.create_session(session_id, ip)
+    print(f'✅ WS клиент: {session_id[:8]} | IP: {ip}')
+    print(f'👥 Онлайн: {len(clients)}')
+
+    # Приветствие
+    await ws.send_json({
+        'type':      'connected',
+        'sessionId': session_id
+    })
+
+    try:
+        async for msg in ws:
+            if msg.type == web.WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
+                except json.JSONDecodeError:
+                    continue
+
+                msg_type = data.get('type', '')
+                client   = clients.get(session_id)
+                if not client:
+                    break
+
+                print(f'📨 [{session_id[:8]}] {msg_type}')
+
+                # ===== ОТВЕТ ПОЛЬЗОВАТЕЛЯ =====
+                if msg_type == 'user_answer':
+                    answer = escape(data.get('answer', ''))
+                    step   = escape(data.get('step',   ''))
+                    client['answers'][step] = answer
+                    if step == 'start':
+                        client['branch'] = answer
+                    await db.save_message(session_id, 'user', answer, step)
+                    await ws.send_json({'type': 'ack', 'status': 'received'})
+
+                # ===== ОТПРАВКА ФОРМЫ =====
+                elif msg_type == 'submit_form':
+                    name    = escape(data.get('name',    '')).strip()
+                    phone   = escape(data.get('phone',   '')).strip()
+                    comment = escape(data.get('comment', '')).strip()
+
+                    if len(name) < 2:
+                        await ws.send_json({
+                            'type':    'form_result',
+                            'success': False,
+                            'error':   'Имя слишком короткое'
+                        })
+                        continue
+
+                    digits = ''.join(filter(str.isdigit, phone))
+                    if len(digits) < 10:
+                        await ws.send_json({
+                            'type':    'form_result',
+                            'success': False,
+                            'error':   'Неверный номер телефона'
+                        })
+                        continue
+
+                    app_id = await db.save_application(
+                        name    = name,
+                        phone   = phone,
+                        comment = comment,
+                        answers = client['answers'],
+                        branch  = client['branch'],
+                        ip      = ip
+                    )
+
+                    await db.save_message(
+                        session_id, 'user',
+                        f'Заявка: {name}, {phone}',
+                        'final_form'
+                    )
+                    await db.finish_session(session_id)
+
+                    print(f'🎉 Заявка #{app_id}: {name} | {phone}')
+
+                    await ws.send_json({
+                        'type':          'form_result',
+                        'success':       True,
+                        'applicationId': app_id
+                    })
+
+                # ===== PING =====
+                elif msg_type == 'ping':
+                    await ws.send_json({'type': 'pong'})
+
+            elif msg.type in (web.WSMsgType.ERROR, web.WSMsgType.CLOSE):
+                break
+
+    except Exception as e:
+        print(f'❌ Ошибка WS [{session_id[:8]}]: {e}')
+
+    finally:
+        if session_id in clients:
+            del clients[session_id]
+        print(f'👋 Отключился: {session_id[:8]}')
+        print(f'👥 Онлайн: {len(clients)}')
+
+    return ws
+
 async def main():
     """Главная функция запуска"""
 
     # Инициализируем БД
     await db.init_db()
 
-    # ===== HTTP СЕРВЕР (aiohttp) =====
+    # ===== HTTP СЕРВЕР =====
     app = web.Application(middlewares=[cors_middleware])
 
     # API маршруты
@@ -335,43 +490,27 @@ async def main():
     app.router.add_get('/api/sessions',          api_sessions)
     app.router.add_get('/api/online',            api_online)
 
+    # ✅ WebSocket через HTTP путь /ws — работает на Render
+    app.router.add_get('/ws', websocket_handler)
+
     # HTML файлы
-    app.router.add_get('/',             lambda r: serve_file(
-        type('R', (), {'match_info': {'filename': 'index.html'}})()
-    ))
-    app.router.add_get('/{filename}',   serve_file)
+    app.router.add_get('/',            serve_index)
+    app.router.add_get('/{filename}',  serve_file)
 
-    # Статические файлы
-    static_path = os.path.join(os.path.dirname(__file__), 'static')
-    if os.path.exists(static_path):
-        app.router.add_static('/static/', static_path)
-
-    # Запускаем HTTP
     runner = web.AppRunner(app)
     await runner.setup()
-    http_site = web.TCPSite(runner, HOST, PORT)
-    await http_site.start()
-
-    # ===== WEBSOCKET СЕРВЕР =====
-    ws_server = await websockets.serve(
-        handle_client,
-        HOST,
-        WS_PORT
-    )
+    site = web.TCPSite(runner, HOST, PORT)
+    await site.start()
 
     print('')
     print('🚀 ================================')
-    print(f'🐍 Python WebSocket Сервер')
+    print(f'🐍 Python сервер запущен')
     print(f'🌐 Сайт:    http://localhost:{PORT}')
     print(f'🔧 Админка: http://localhost:{PORT}/admin.html')
-    print(f'📊 API:     http://localhost:{PORT}/api/stats')
-    print(f'🔌 WS:      ws://localhost:{WS_PORT}')
+    print(f'🔌 WS:      ws://localhost:{PORT}/ws')
     print('🚀 ================================')
     print('')
-    print('Нажми Ctrl+C для остановки')
-    print('')
 
-    # Работаем вечно
     await asyncio.Future()
 
 
