@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СтройМастер — Строительство и ремонт под ключ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Montserrat', sans-serif; background: #f8f8f8; color: #222; line-height: 1.6; }
+
+        :root {
+            --accent: #E85D04;
+            --accent-dark: #c94d00;
+            --dark: #1a1a1a;
+            --gray: #666;
+            --light-gray: #f0f0f0;
+            --border: #e0e0e0;
+            --white: #fff;
+            --container: 1160px;
+            --radius: 5px;
+            --section-gap: 80px;
+        }
+
+        .container { max-width: var(--container); margin: 0 auto; padding: 0 20px; }
+        .btn { display: inline-block; padding: 13px 28px; border-radius: var(--radius); font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-decoration: none; transition: background 0.2s, transform 0.15s; letter-spacing: 0.3px; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+        .btn-outline:hover { background: var(--accent); color: #fff; }
+        .btn-white { background: #fff; color: var(--accent); }
+        .btn-white:hover { background: #f0f0f0; }
+
+        .section-title { font-size: 32px; font-weight: 800; color: var(--dark); margin-bottom: 12px; }
+        .section-subtitle { font-size: 16px; color: var(--gray); margin-bottom: 50px; }
+        .section-head { text-align: center; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: #fff; border-radius: 8px; padding: 40px; max-width: 480px; width: 90%; position: relative; }
+        .modal-close { position: absolute; top: 14px; right: 18px; font-size: 22px; cursor: pointer; color: #999; background: none; border: none; font-family: inherit; line-height: 1; }
+        .modal-close:hover { color: var(--dark); }
+        .modal h3 { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: var(--dark); }
+
+        /* FORM */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--dark); }
+        .form-group input,
+        .form-group textarea,
+        .form-group select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'Montserrat', sans-serif; font-size: 14px; color: var(--dark); background: #fafafa; transition: border 0.2s; outline: none; }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus { border-color: var(--accent); background: #fff; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+
+        /* HEADER */
+        .header { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .header-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 20px; }
+        .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+        .logo-icon { width: 40px; height: 40px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+        .logo-text { font-size: 20px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
+        .logo-text span { color: var(--accent); }
+        .nav { display: flex; gap: 4px; }
+        .nav-link { padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--gray); cursor: pointer; border-radius: var(--radius); transition: color 0.2s, background 0.2s; border: none; background: none; font-family: inherit; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: var(--accent); background: #fff4ee; }
+        .header-cta { flex-shrink: 0; }
+
+        /* HERO */
+        .hero { position: relative; min-height: 600px; display: flex; align-items: center; overflow: hidden; background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 50%, #1a1a1a 100%); }
+        .hero-bg { position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&q=80') center/cover no-repeat; opacity: 0.25; }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,26,46,0.85) 0%, rgba(232,93,4,0.15) 100%); }
+        .hero-content { position: relative; z-index: 1; max-width: 680px; padding: 80px 0; }
+        .hero-badge { display: inline-block; background: rgba(232,93,4,0.2); border: 1px solid rgba(232,93,4,0.4); color: #ff8c42; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin-bottom: 24px; letter-spacing: 1px; text-transform: uppercase; }
+        .hero h1 { font-size: 52px; font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 18px; letter-spacing: -1px; }
+        .hero h1 span { color: var(--accent); }
+        .hero p { font-size: 20px; color: rgba(255,255,255,0.75); margin-bottom: 36px; font-weight: 400; }
+        .hero-stats { display: flex; gap: 40px; margin-top: 48px; }
+        .hero-stat strong { display: block; font-size: 28px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
+        .hero-stat strong span { color: var(--accent); }
+        .hero-stat p { font-size: 13px; margin: 0; color: rgba(255,255,255,0.55); }
+
+        /* SERVICES */
+        .services-section { padding: var(--section-gap) 0; background: #fff; }
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .service-card { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; padding: 32px 28px; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; }
+        .service-card:hover { box-shadow: 0 8px 30px rgba(232,93,4,0.12); transform: translateY(-3px); border-color: rgba(232,93,4,0.3); }
+        .service-icon { width: 54px; height: 54px; background: linear-gradient(135deg, #fff4ee, #ffe0cc); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 26px; }
+        .service-card h3 { font-size: 17px; font-weight: 700; color: var(--dark); margin-bottom: 10px; }
+        .service-card p { font-size: 14px; color: var(--gray); line-height: 1.65; margin-bottom: 22px; }
+
+        /* ADVANTAGES */
+        .advantages-section { padding: var(--section-gap) 0; background: var(--light-gray); }
+        .advantages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .advantage-card { background: #fff; border-radius: 8px; padding: 32px 28px; border: 1px solid var(--border); display: flex; gap: 18px; align-items: flex-start; }
+        .advantage-num { font-size: 36px; font-weight: 800; color: var(--accent); line-height: 1; flex-shrink: 0; margin-top: 2px; }
+        .advantage-card h3 { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+        .advantage-card p { font-size: 14px; color: var(--gray); line-height: 1.6; }
+
+        /* CTA */
+        .cta-banner { padding: 70px 0; background: linear-gradient(135deg, var(--accent) 0%, #c94d00 100%); }
+        .cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        .cta-text h2 { font-size: 30px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+        .cta-text p { font-size: 16px; color: rgba(255,255,255,0.8); }
+
+        /* FORM SECTION */
+        .form-section { padding: var(--section-gap) 0; background: #fff; }
+        .form-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+        .form-info h2 { font-size: 30px; font-weight: 800; margin-bottom: 16px; color: var(--dark); }
+        .form-info p { font-size: 15px; color: var(--gray); line-height: 1.7; margin-bottom: 28px; }
+        .form-contact-item { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 14px; color: var(--dark); }
+        .form-contact-icon { width: 36px; height: 36px; background: #fff4ee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .form-card { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+        .form-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--dark); }
+
+        /* FOOTER */
+        .footer { background: var(--dark); padding: 60px 0 0; color: rgba(255,255,255,0.7); }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 50px; }
+        .footer-col h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.8px; }
+        .footer-col p, .footer-col a { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.7; text-decoration: none; display: block; margin-bottom: 8px; transition: color 0.2s; cursor: pointer; }
+        .footer-col a:hover { color: var(--accent); }
+        .footer-logo-text { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .footer-logo-text span { color: var(--accent); }
+        .footer-desc { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7; margin-bottom: 24px; }
+        .social-links { display: flex; gap: 10px; }
+        .social-link { width: 38px; height: 38px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; text-decoration: none; transition: background 0.2s; cursor: pointer; color: rgba(255,255,255,0.7); }
+        .social-link:hover { background: var(--accent); color: #fff; }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: rgba(255,255,255,0.4); }
+
+        /* PAGE HEADER */
+        .page-header { background: linear-gradient(135deg, var(--dark), #2d2d2d); padding: 60px 0 50px; color: #fff; }
+        .page-header h1 { font-size: 38px; font-weight: 800; margin-bottom: 10px; }
+        .page-header p { font-size: 16px; color: rgba(255,255,255,0.6); }
+        .breadcrumb { display: flex; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 16px; align-items: center; }
+        .breadcrumb span { cursor: pointer; transition: color 0.2s; }
+        .breadcrumb span:hover { color: var(--accent); }
+        .breadcrumb .sep, .breadcrumb .current { cursor: default; }
+        .breadcrumb .current { color: rgba(255,255,255,0.8); }
+
+        /* CATALOG */
+        .catalog-layout { padding: 50px 0; background: var(--light-gray); min-height: 600px; }
+        .catalog-inner { display: grid; grid-template-columns: 260px 1fr; gap: 30px; align-items: start; }
+        .filter-panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 28px; position: sticky; top: 88px; }
+        .filter-panel h3 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--dark); }
+        .filter-label { font-size: 12px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; margin-top: 18px; }
+        .price-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .filter-panel input,
+        .filter-panel select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--dark); background: #fafafa; outline: none; }
+        .filter-btn { margin-top: 22px; width: 100%; }
+        .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+        .product-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+        .product-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); transform: translateY(-3px); }
+        .product-img { width: 100%; height: 200px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .product-body { padding: 20px; }
+        .product-category { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .product-name { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 10px; line-height: 1.4; }
+        .product-price { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 16px; }
+        .product-price span { font-size: 13px; font-weight: 500; color: var(--gray); }
+
+        /* PRODUCT DETAIL */
+        .product-detail { padding: 50px 0; background: var(--light-gray); }
+        .product-detail-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; margin-bottom: 50px; }
+        .product-detail-img { background: #fff; border: 1px solid var(--border); border-radius: 8px; height: 400px; display: flex; align-items: center; justify-content: center; font-size: 80px; }
+        .product-detail-info { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+        .product-detail-info h2 { font-size: 26px; font-weight: 800; margin-bottom: 16px; color: var(--dark); }
+        .product-detail-info .product-price { font-size: 32px; margin-bottom: 20px; }
+        .product-detail-info p { font-size: 14px; color: var(--gray); line-height: 1.7; margin-bottom: 24px; }
+        .specs-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+        .specs-table tr { border-bottom: 1px solid var(--border); }
+        .specs-table td { padding: 11px 0; font-size: 14px; }
+        .specs-table td:first-child { color: var(--gray); width: 50%; }
+        .specs-table td:last-child { font-weight: 600; color: var(--dark); }
+
+        /* SERVICES PAGE */
+        .services-page { padding: 50px 0; background: var(--light-gray); }
+        .services-page-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .service-page-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+        .service-page-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); transform: translateY(-3px); }
+        .service-img { width: 100%; height: 180px; background: linear-gradient(135deg, #fff4ee, #ffe0cc); display: flex; align-items: center; justify-content: center; font-size: 56px; }
+        .service-body { padding: 24px; }
+        .service-body h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: var(--dark); }
+        .service-body p { font-size: 14px; color: var(--gray); line-height: 1.65; margin-bottom: 20px; }
+
+        /* SERVICE DETAIL */
+        .service-detail { padding: 50px 0; background: var(--light-gray); }
+        .service-detail-content { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 40px; margin-bottom: 30px; }
+        .service-detail-content h2 { font-size: 26px; font-weight: 800; margin-bottom: 18px; color: var(--dark); }
+        .service-detail-content p { font-size: 15px; color: var(--gray); line-height: 1.75; margin-bottom: 16px; }
+        .steps-list { counter-reset: step; list-style: none; margin-top: 10px; }
+        .steps-list li { counter-increment: step; display: flex; gap: 18px; align-items: flex-start; margin-bottom: 20px; padding: 20px; background: #fafafa; border: 1px solid var(--border); border-radius: 8px; }
+        .steps-list li::before { content: counter(step); font-size: 20px; font-weight: 800; color: var(--accent); min-width: 34px; line-height: 1; }
+        .step-content h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--dark); }
+        .step-content p { font-size: 14px; color: var(--gray); margin: 0; }
+        .works-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
+        .work-photo { height: 160px; background: linear-gradient(135deg, #e0e0e0, #f0f0f0); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 36px; border: 1px solid var(--border); }
+
+        /* ABOUT */
+        .about-page { padding: 50px 0; background: var(--light-gray); }
+        .about-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; margin-bottom: 40px; }
+        .about-text { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+        .about-text h2 { font-size: 26px; font-weight: 800; margin-bottom: 18px; color: var(--dark); }
+        .about-text p { font-size: 14px; color: var(--gray); line-height: 1.8; margin-bottom: 14px; }
+        .about-photo { background: linear-gradient(135deg, #e0e0e0, #f5f5f5); border-radius: 8px; min-height: 340px; display: flex; align-items: center; justify-content: center; font-size: 80px; border: 1px solid var(--border); }
+        .certs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 30px; }
+        .cert-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; text-align: center; }
+        .cert-card .cert-icon { font-size: 40px; margin-bottom: 12px; }
+        .cert-card h4 { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+        .cert-card p { font-size: 12px; color: var(--gray); }
+        .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+        .why-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 28px; border-left: 4px solid var(--accent); }
+        .why-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
+        .why-card p { font-size: 14px; color: var(--gray); line-height: 1.6; }
+
+        /* CONTACTS */
+        .contacts-page { padding: 50px 0; background: var(--light-gray); }
+        .contacts-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; margin-bottom: 30px; }
+        .contact-info-block { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+        .contact-info-block h3 { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--dark); }
+        .contact-item { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+        .contact-item-icon { width: 44px; height: 44px; background: #fff4ee; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .contact-item-text strong { display: block; font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .contact-item-text span { font-size: 15px; font-weight: 500; color: var(--dark); }
+        .map-block { background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .map-placeholder { height: 340px; background: linear-gradient(135deg, #e8f4f8, #d0eaf0); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--gray); font-size: 14px; }
+        .map-placeholder .map-icon { font-size: 50px; }
+        .contact-form-block { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 36px; }
+        .contact-form-block h3 { font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--dark); }
+        .contact-form-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .contact-form-inner .full-width { grid-column: 1 / -1; }
+
+        /* NOTIFICATION */
+        .notification { position: fixed; bottom: 100px; right: 30px; background: #fff; border: 1px solid var(--border); border-left: 4px solid #22c55e; border-radius: 8px; padding: 16px 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 2000; font-size: 14px; font-weight: 500; color: var(--dark); transform: translateX(120%); transition: transform 0.3s; max-width: 300px; }
+        .notification.show { transform: translateX(0); }
+        .notification p { margin-top: 4px; font-size: 13px; color: var(--gray); font-weight: 400; }
+
+        /* ============================================
+           CHATBOT STYLES
+        ============================================ */
+        .chat-float-btn { position: fixed; bottom: 30px; right: 30px; z-index: 500; background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 14px 22px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 24px rgba(232,93,4,0.45); display: flex; align-items: center; gap: 10px; transition: background 0.2s, transform 0.2s; animation: pulse-btn 2.5s infinite; }
+        .chat-float-btn:hover { background: var(--accent-dark); transform: translateY(-2px); }
+        .chat-float-icon { font-size: 20px; }
+        .chat-float-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: blink 1.5s infinite; }
+
+        @keyframes pulse-btn { 0%,100%{box-shadow:0 6px 24px rgba(232,93,4,0.45);}50%{box-shadow:0 6px 36px rgba(232,93,4,0.7);} }
+        @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+        @keyframes typing { 0%,60%,100%{transform:translateY(0);opacity:0.4;}30%{transform:translateY(-6px);opacity:1;} }
+
+        .chat-window { position: fixed; bottom: 100px; right: 30px; width: 380px; height: 580px; background: #fff; border-radius: 14px; box-shadow: 0 12px 50px rgba(0,0,0,0.18); z-index: 600; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.85) translateY(40px); opacity: 0; pointer-events: none; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s; transform-origin: bottom right; }
+        .chat-window.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+
+        .chat-header { background: linear-gradient(135deg, var(--accent), #c94d00); padding: 16px 18px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .chat-avatar { width: 42px; height: 42px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .chat-header-info { flex: 1; }
+        .chat-header-name { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.2; }
+        .chat-header-status { font-size: 12px; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+        .chat-status-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: blink 1.5s infinite; }
+        .chat-close-btn { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+        .chat-close-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .ws-status-bar { background: #f0fdf4; border-bottom: 1px solid #bbf7d0; padding: 6px 16px; font-size: 11px; color: #15803d; font-weight: 600; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .ws-status-bar .ws-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
+        .ws-status-bar.ws-connecting { background: #fefce8; border-color: #fde68a; color: #92400e; }
+        .ws-status-bar.ws-connecting .ws-dot { background: #f59e0b; }
+        .ws-status-bar.ws-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        .ws-status-bar.ws-error .ws-dot { background: #ef4444; }
+
+        .chat-messages { flex: 1; overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+        .msg-row { display: flex; gap: 8px; align-items: flex-end; }
+        .msg-row.bot { justify-content: flex-start; }
+        .msg-row.user { justify-content: flex-end; }
+        .msg-avatar { width: 30px; height: 30px; background: linear-gradient(135deg, var(--accent), #c94d00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .msg-bubble { max-width: 75%; padding: 11px 14px; border-radius: 14px; font-size: 14px; line-height: 1.55; }
+        .msg-row.bot .msg-bubble { background: #f3f4f6; color: var(--dark); border-bottom-left-radius: 4px; }
+        .msg-row.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+        .msg-time { font-size: 10px; color: #aaa; margin-top: 4px; }
+        .msg-row.bot .msg-time { text-align: left; }
+        .msg-row.user .msg-time { text-align: right; }
+
+        .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 12px 14px; background: #f3f4f6; border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
+        .typing-dot { width: 7px; height: 7px; background: #aaa; border-radius: 50%; animation: typing 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .chat-footer { border-top: 1px solid var(--border); padding: 12px 14px; background: #fafafa; flex-shrink: 0; }
+        .chat-options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chat-option-btn { padding: 9px 14px; background: #fff; border: 1.5px solid var(--accent); border-radius: 20px; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; transition: background 0.15s, color 0.15s, transform 0.1s; line-height: 1.2; }
+        .chat-option-btn:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
+        .chat-option-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+        .chat-final-form { display: flex; flex-direction: column; gap: 10px; }
+        .chat-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 13px; color: var(--dark); background: #fff; outline: none; transition: border 0.2s; }
+        .chat-input:focus { border-color: var(--accent); }
+        .chat-input.error { border-color: #ef4444; }
+        .chat-textarea { resize: none; height: 70px; }
+        .chat-checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--gray); line-height: 1.4; }
+        .chat-checkbox-row input[type="checkbox"] { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+        .chat-submit-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 12px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .chat-submit-btn:hover { background: var(--accent-dark); }
+        .chat-submit-btn:disabled { background: #ccc; cursor: default; }
+
+        .chat-result { text-align: center; padding: 20px 10px; }
+        .chat-result-icon { font-size: 48px; margin-bottom: 14px; }
+        .chat-result h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
+        .chat-result p { font-size: 13px; color: var(--gray); line-height: 1.6; margin-bottom: 18px; }
+        .chat-result-btns { display: flex; flex-direction: column; gap: 8px; }
+        .chat-result-btn { padding: 11px; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background 0.2s; }
+        .chat-result-btn.primary { background: var(--accent); color: #fff; }
+        .chat-result-btn.primary:hover { background: var(--accent-dark); }
+        .chat-result-btn.secondary { background: #f3f4f6; color: var(--dark); }
+        .chat-result-btn.secondary:hover { background: #e5e7eb; }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .chat-window { width: 100%; height: 90vh; bottom: 0; right: 0; border-radius: 14px 14px 0 0; }
+            .chat-float-btn { bottom: 16px; right: 16px; padding: 12px 18px; font-size: 13px; }
+        }
+        @media (max-width: 1024px) {
+            .services-grid, .advantages-grid, .services-page-grid, .products-grid { grid-template-columns: repeat(2,1fr); }
+            .catalog-inner { grid-template-columns: 1fr; }
+            .filter-panel { position: static; }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+            .certs-grid { grid-template-columns: repeat(2,1fr); }
+            .works-gallery { grid-template-columns: repeat(2,1fr); }
+        }
+        @media (max-width: 768px) {
+            :root { --section-gap: 50px; }
+            .hero h1 { font-size: 34px; }
+            .nav { display: none; }
+            .services-grid, .advantages-grid, .services-page-grid, .products-grid, .why-grid { grid-template-columns: 1fr; }
+            .form-wrapper, .about-intro, .contacts-grid, .product-detail-inner { grid-template-columns: 1fr; }
+            .cta-inner { flex-direction: column; text-align: center; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .contact-form-inner { grid-template-columns: 1fr; }
+            .hero-stats { gap: 24px; flex-wrap: wrap; }
+            .section-title { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="container">
+        <div class="header-inner">
+            <a class="logo" onclick="showPage('home')">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                </div>
+                <div class="logo-text">Строй<span>Мастер</span></div>
+            </a>
+            <nav class="nav">
+                <button class="nav-link active" onclick="showPage('home')" id="nav-home">Главная</button>
+                <button class="nav-link" onclick="showPage('catalog')" id="nav-catalog">Каталог товаров</button>
+                <button class="nav-link" onclick="showPage('services')" id="nav-services">Услуги</button>
+                <button class="nav-link" onclick="showPage('about')" id="nav-about">О компании</button>
+                <button class="nav-link" onclick="showPage('contacts')" id="nav-contacts">Контакты</button>
+            </nav>
+            <div class="header-cta">
+                <button class="btn btn-primary" onclick="openChatBot()">Оставить заявку</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ============ HOME PAGE ============ -->
+<div id="page-home" class="page active">
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">✦ Профессиональное строительство</div>
+                <h1>Строительство и ремонт <span>под ключ</span></h1>
+                <p>Качественно. Надёжно. В срок.</p>
+                <button class="btn btn-primary" onclick="openChatBot()" style="font-size:15px;padding:15px 34px;">
+                    Получить консультацию
+                </button>
+                <div class="hero-stats">
+                    <div class="hero-stat"><strong>10<span>+</span></strong><p>лет на рынке</p></div>
+                    <div class="hero-stat"><strong>850<span>+</span></strong><p>объектов сдано</p></div>
+                    <div class="hero-stat"><strong>5<span> лет</span></strong><p>гарантия работ</p></div>
+                    <div class="hero-stat"><strong>98<span>%</span></strong><p>довольных клиентов</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-section">
+        <div class="container">
+            <div class="section-head">
+                <h2 class="section-title">Наши услуги</h2>
+                <p class="section-subtitle">Полный спектр строительных и ремонтных работ</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card"><div class="service-icon">🏠</div><h3>Строительство домов</h3><p>Возводим дома из газобетона, кирпича, дерева и SIP-панелей под ключ.</p><button class="btn btn-outline" onclick="showServiceDetail('Строительство домов')">Подробнее</button></div>
+                <div class="service-card"><div class="service-icon">🔨</div><h3>Ремонт квартир</h3><p>Косметический, капитальный ремонт и ремонт под ключ любой сложности.</p><button class="btn btn-outline" onclick="showServiceDetail('Ремонт квартир')">Подробнее</button></div>
+                <div class="service-card"><div class="service-icon">🎨</div><h3>Отделочные работы</h3><p>Штукатурка, шпаклёвка, укладка плитки, поклейка обоев, покраска.</p><button class="btn btn-outline" onclick="showServiceDetail('Отделочные работы')">Подробнее</button></div>
+                <div class="service-card"><div class="service-icon">📐</div><h3>Проектирование</h3><p>Разработка архитектурных проектов и дизайн-проектов интерьера.</p><button class="btn btn-outline" onclick="showServiceDetail('Проектирование')">Подробнее</button></div>
+                <div class="service-card"><div class="service-icon">🏗️</div><h3>Монтаж кровли</h3><p>Устройство мягкой и металлической кровли, стропильной системы.</p><button class="btn btn-outline" onclick="showServiceDetail('Монтаж кровли')">Подробнее</button></div>
+                <div class="service-card"><div class="service-icon">🧱</div><h3>Фасадные работы</h3><p>Утепление, штукатурка, облицовка фасадов, вентилируемые фасады.</p><button class="btn btn-outline" onclick="showServiceDetail('Фасадные работы')">Подробнее</button></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="advantages-section">
+        <div class="container">
+            <div class="section-head">
+                <h2 class="section-title">Почему выбирают нас</h2>
+                <p class="section-subtitle">Работаем честно, прозрачно и с полной ответственностью</p>
+            </div>
+            <div class="advantages-grid">
+                <div class="advantage-card"><div class="advantage-num">01</div><div><h3>10+ лет опыта</h3><p>Более 850 успешно реализованных объектов по всему региону.</p></div></div>
+                <div class="advantage-card"><div class="advantage-num">02</div><div><h3>Работаем по договору</h3><p>Каждый проект оформляется официальным договором.</p></div></div>
+                <div class="advantage-card"><div class="advantage-num">03</div><div><h3>Гарантия 5 лет</h3><p>Письменная гарантия на все выполненные работы.</p></div></div>
+                <div class="advantage-card"><div class="advantage-num">04</div><div><h3>Собственная техника</h3><p>Парк из 35 единиц современной строительной техники.</p></div></div>
+                <div class="advantage-card"><div class="advantage-num">05</div><div><h3>Фиксированная смета</h3><p>Цена не меняется в процессе строительства без согласования.</p></div></div>
+                <div class="advantage-card"><div class="advantage-num">06</div><div><h3>Собственные специалисты</h3><p>Штатные строители и инженеры — никаких субподрядчиков.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-banner">
+        <div class="container">
+            <div class="cta-inner">
+                <div class="cta-text"><h2>Готовы начать ваш проект?</h2><p>Оставьте заявку — рассчитаем стоимость бесплатно за 24 часа</p></div>
+                <button class="btn btn-white" onclick="openChatBot()" style="font-size:15px;padding:16px 36px;">Получить консультацию</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <div class="container">
+            <div class="form-wrapper">
+                <div class="form-info">
+                    <h2>Оставьте заявку — свяжемся в течение часа</h2>
+                    <p>Наш специалист проконсультирует вас по всем вопросам и подберёт оптимальное решение.</p>
+                    <div class="form-contact-item"><div class="form-contact-icon">📞</div><span>+7 (495) 123-45-67</span></div>
+                    <div class="form-contact-item"><div class="form-contact-icon">✉️</div><span>info@stroymaster.ru</span></div>
+                    <div class="form-contact-item"><div class="form-contact-icon">📍</div><span>г. Москва, ул. Строителей, д. 12</span></div>
+                    <div class="form-contact-item"><div class="form-contact-icon">🕐</div><span>Пн–Пт: 9:00–19:00, Сб: 10:00–16:00</span></div>
+                </div>
+                <div class="form-card">
+                    <h3>Бесплатная консультация</h3>
+                    <form onsubmit="handleFormSubmit(event)">
+                        <div class="form-group"><label>Ваше имя *</label><input type="text" placeholder="Иван Петров" required></div>
+                        <div class="form-group"><label>Телефон *</label><input type="tel" placeholder="+7 (___) ___-__-__" required></div>
+                        <div class="form-group"><label>Комментарий</label><textarea placeholder="Опишите ваш проект..."></textarea></div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;font-size:15px;padding:15px;">Отправить заявку</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ============ CATALOG PAGE ============ -->
+<div id="page-catalog" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span class="current">Каталог товаров</span></div>
+            <h1>Каталог товаров</h1><p>Строительные материалы и оборудование высокого качества</p>
+        </div>
+    </div>
+    <div class="catalog-layout">
+        <div class="container">
+            <div class="catalog-inner">
+                <div class="filter-panel">
+                    <h3>Фильтр</h3>
+                    <div class="filter-label">Категория</div>
+                    <select><option value="">Все категории</option><option>Кирпич и блоки</option><option>Сухие смеси</option><option>Кровельные материалы</option><option>Утеплители</option><option>Инструменты</option></select>
+                    <div class="filter-label">Цена (₽)</div>
+                    <div class="price-range"><input type="number" placeholder="от"><input type="number" placeholder="до"></div>
+                    <button class="btn btn-primary filter-btn">Применить</button>
+                    <br><button class="btn btn-outline filter-btn" style="margin-top:10px;background:none;">Сбросить</button>
+                </div>
+                <div class="products-grid">
+                    <div class="product-card"><div class="product-img">🧱</div><div class="product-body"><div class="product-category">Кирпич и блоки</div><div class="product-name">Газобетонный блок D500 600×200×300</div><div class="product-price">1 250 ₽ <span>/ шт.</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                    <div class="product-card"><div class="product-img">🏗️</div><div class="product-body"><div class="product-category">Кровельные материалы</div><div class="product-name">Металлочерепица Монтеррей 0.5мм</div><div class="product-price">480 ₽ <span>/ м²</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                    <div class="product-card"><div class="product-img">🎨</div><div class="product-body"><div class="product-category">Сухие смеси</div><div class="product-name">Штукатурка Knauf Ротбанд 30 кг</div><div class="product-price">890 ₽ <span>/ мешок</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                    <div class="product-card"><div class="product-img">🔥</div><div class="product-body"><div class="product-category">Утеплители</div><div class="product-name">Базальтовая вата Rockwool 50мм</div><div class="product-price">320 ₽ <span>/ м²</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                    <div class="product-card"><div class="product-img">🪨</div><div class="product-body"><div class="product-category">Фасадные материалы</div><div class="product-name">Декоративная штукатурка «Короед» 25кг</div><div class="product-price">1 100 ₽ <span>/ ведро</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                    <div class="product-card"><div class="product-img">🔧</div><div class="product-body"><div class="product-category">Инструменты</div><div class="product-name">Перфоратор Bosch GBH 2-28 DFV</div><div class="product-price">18 900 ₽ <span>/ шт.</span></div><button class="btn btn-primary" onclick="showProductDetail()" style="width:100%">Подробнее</button></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PRODUCT DETAIL ============ -->
+<div id="page-product-detail" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span onclick="showPage('catalog')">Каталог</span><span class="sep">›</span><span class="current">Газобетонный блок D500</span></div>
+            <h1>Газобетонный блок D500</h1><p>Кирпич и блоки</p>
+        </div>
+    </div>
+    <div class="product-detail">
+        <div class="container">
+            <div class="product-detail-inner">
+                <div class="product-detail-img">🧱</div>
+                <div class="product-detail-info">
+                    <div class="product-category">Кирпич и блоки</div>
+                    <h2>Газобетонный блок D500 600×200×300</h2>
+                    <div class="product-price">1 250 ₽ <span>/ шт.</span></div>
+                    <p>Газобетонный блок плотностью D500 — оптимальный выбор для строительства несущих стен и перегородок.</p>
+                    <table class="specs-table">
+                        <tr><td>Размер</td><td>600 × 200 × 300 мм</td></tr>
+                        <tr><td>Плотность</td><td>D500 (500 кг/м³)</td></tr>
+                        <tr><td>Класс прочности</td><td>B3.5</td></tr>
+                        <tr><td>Морозостойкость</td><td>F100</td></tr>
+                        <tr><td>В наличии</td><td>✓ На складе</td></tr>
+                    </table>
+                    <button class="btn btn-primary" onclick="openChatBot()" style="width:100%;font-size:15px;padding:15px;">Заказать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ SERVICES PAGE ============ -->
+<div id="page-services" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span class="current">Услуги</span></div>
+            <h1>Наши услуги</h1><p>Полный комплекс строительных работ</p>
+        </div>
+    </div>
+    <div class="services-page">
+        <div class="container">
+            <div class="services-page-grid">
+                <div class="service-page-card"><div class="service-img">🏠</div><div class="service-body"><h3>Строительство домов</h3><p>Возведение жилых домов из различных материалов.</p><button class="btn btn-primary" onclick="showServiceDetail('Строительство домов')">Заказать</button></div></div>
+                <div class="service-page-card"><div class="service-img">🔨</div><div class="service-body"><h3>Ремонт квартир</h3><p>Комплексный ремонт квартир под ключ.</p><button class="btn btn-primary" onclick="showServiceDetail('Ремонт квартир')">Заказать</button></div></div>
+                <div class="service-page-card"><div class="service-img">🎨</div><div class="service-body"><h3>Отделочные работы</h3><p>Все виды внутренней и внешней отделки.</p><button class="btn btn-primary" onclick="showServiceDetail('Отделочные работы')">Заказать</button></div></div>
+                <div class="service-page-card"><div class="service-img">📐</div><div class="service-body"><h3>Проектирование</h3><p>Разработка проектной документации.</p><button class="btn btn-primary" onclick="showServiceDetail('Проектирование')">Заказать</button></div></div>
+                <div class="service-page-card"><div class="service-img">🏗️</div><div class="service-body"><h3>Монтаж кровли</h3><p>Устройство кровель любой конфигурации.</p><button class="btn btn-primary" onclick="showServiceDetail('Монтаж кровли')">Заказать</button></div></div>
+                <div class="service-page-card"><div class="service-img">🧱</div><div class="service-body"><h3>Фасадные работы</h3><p>Утепление и декоративная отделка фасадов.</p><button class="btn btn-primary" onclick="showServiceDetail('Фасадные работы')">Заказать</button></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ SERVICE DETAIL ============ -->
+<div id="page-service-detail" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span onclick="showPage('services')">Услуги</span><span class="sep">›</span><span class="current" id="service-detail-breadcrumb">Услуга</span></div>
+            <h1 id="service-detail-title">Услуга</h1><p>Профессионально и с гарантией результата</p>
+        </div>
+    </div>
+    <div class="service-detail">
+        <div class="container">
+            <div class="service-detail-content">
+                <h2>О услуге</h2>
+                <p>Мы осуществляем полный цикл строительных работ — от разработки проекта до сдачи готового объекта.</p>
+                <h2 style="margin-top:32px;margin-bottom:20px;">Этапы работы</h2>
+                <ul class="steps-list">
+                    <li><div class="step-content"><h4>Консультация и замер</h4><p>Выезжаем на объект, проводим бесплатный замер.</p></div></li>
+                    <li><div class="step-content"><h4>Проектирование и смета</h4><p>Составляем детальную смету с фиксированными ценами.</p></div></li>
+                    <li><div class="step-content"><h4>Подписание договора</h4><p>Оформляем официальный договор.</p></div></li>
+                    <li><div class="step-content"><h4>Выполнение работ</h4><p>Приступаем к работам в согласованные сроки.</p></div></li>
+                    <li><div class="step-content"><h4>Сдача объекта</h4><p>Проводим итоговую проверку и подписываем акт.</p></div></li>
+                </ul>
+                <h2 style="margin-top:32px;margin-bottom:16px;">Примеры работ</h2>
+                <div class="works-gallery">
+                    <div class="work-photo">🏠</div><div class="work-photo">🏡</div>
+                    <div class="work-photo">🏗️</div><div class="work-photo">🔨</div>
+                </div>
+            </div>
+            <div class="form-card">
+                <h3>Оставить заявку на услугу</h3>
+                <form onsubmit="handleFormSubmit(event)">
+                    <div class="form-group"><label>Имя *</label><input type="text" placeholder="Ваше имя" required></div>
+                    <div class="form-group"><label>Телефон *</label><input type="tel" placeholder="+7 (___) ___-__-__" required></div>
+                    <div class="form-group"><label>Комментарий</label><textarea placeholder="Опишите вашу задачу..."></textarea></div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;font-size:15px;padding:14px;">Отправить заявку</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ABOUT PAGE ============ -->
+<div id="page-about" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span class="current">О компании</span></div>
+            <h1>О компании</h1><p>Строим с 2014 года — качество и репутация превыше всего</p>
+        </div>
+    </div>
+    <div class="about-page">
+        <div class="container">
+            <div class="about-intro">
+                <div class="about-text">
+                    <h2>СтройМастер — ваш надёжный партнёр</h2>
+                    <p>Компания «СтройМастер» работает на строительном рынке с 2014 года. За это время мы реализовали более 850 проектов различной сложности.</p>
+                    <p>Наш принцип — прозрачность на каждом этапе работы. Мы не берём предоплату без договора, не меняем сметы в процессе и всегда сдаём объекты в оговорённые сроки.</p>
+                    <p>В штате компании работает более 120 специалистов. Мы не привлекаем субподрядчиков — это позволяет гарантировать качество на каждом этапе.</p>
+                    <p>Собственный парк техники из 35 единиц оборудования позволяет выполнять работы любой сложности без простоев.</p>
+                </div>
+                <div class="about-photo">👷</div>
+            </div>
+            <div class="section-head" style="margin-top:60px;margin-bottom:30px;">
+                <h2 class="section-title">Лицензии и сертификаты</h2>
+            </div>
+            <div class="certs-grid">
+                <div class="cert-card"><div class="cert-icon">📋</div><h4>Допуск СРО</h4><p>Свидетельство о допуске к особо опасным работам</p></div>
+                <div class="cert-card"><div class="cert-icon">🏅</div><h4>ISO 9001:2015</h4><p>Сертификат системы менеджмента качества</p></div>
+                <div class="cert-card"><div class="cert-icon">🔐</div><h4>Лицензия МЧС</h4><p>Лицензия на монтаж пожарных систем</p></div>
+                <div class="cert-card"><div class="cert-icon">⭐</div><h4>Партнёр года 2023</h4><p>Награда от ассоциации строителей России</p></div>
+            </div>
+            <div class="section-head" style="margin-top:60px;margin-bottom:30px;">
+                <h2 class="section-title">Почему выбирают нас</h2>
+            </div>
+            <div class="why-grid">
+                <div class="why-card"><h4>🤝 Честные отношения</h4><p>Работаем только по официальному договору.</p></div>
+                <div class="why-card"><h4>📊 Прозрачная отчётность</h4><p>Регулярно предоставляем фотоотчёты о ходе работ.</p></div>
+                <div class="why-card"><h4>⏱️ Соблюдение сроков</h4><p>Сдаём объекты в срок в 96% случаев.</p></div>
+                <div class="why-card"><h4>🔧 Собственные мастера</h4><p>Только проверенные штатные специалисты.</p></div>
+                <div class="why-card"><h4>💰 Фиксированные цены</h4><p>Смета не меняется в одностороннем порядке.</p></div>
+                <div class="why-card"><h4>🛡️ Гарантия на работы</h4><p>Письменная гарантия 5 лет на все работы.</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CONTACTS PAGE ============ -->
+<div id="page-contacts" class="page">
+    <div class="page-header">
+        <div class="container">
+            <div class="breadcrumb"><span onclick="showPage('home')">Главная</span><span class="sep">›</span><span class="current">Контакты</span></div>
+            <h1>Контакты</h1><p>Свяжитесь с нами любым удобным способом</p>
+        </div>
+    </div>
+    <div class="contacts-page">
+        <div class="container">
+            <div class="contacts-grid">
+                <div class="contact-info-block">
+                    <h3>Контактная информация</h3>
+                    <div class="contact-item"><div class="contact-item-icon">📍</div><div class="contact-item-text"><strong>Адрес</strong><span>г. Москва, ул. Строителей, д. 12, офис 301</span></div></div>
+                    <div class="contact-item"><div class="contact-item-icon">📞</div><div class="contact-item-text"><strong>Телефон</strong><span>+7 (495) 123-45-67</span></div></div>
+                    <div class="contact-item"><div class="contact-item-icon">✉️</div><div class="contact-item-text"><strong>Email</strong><span>info@stroymaster.ru</span></div></div>
+                    <div class="contact-item"><div class="contact-item-icon">🕐</div><div class="contact-item-text"><strong>Часы работы</strong><span>Пн–Пт: 9:00–19:00, Сб: 10:00–16:00</span></div></div>
+                </div>
+                <div class="map-block">
+                    <div class="map-placeholder"><div class="map-icon">🗺️</div><strong>Карта проезда</strong><p>г. Москва, ул. Строителей, д. 12</p></div>
+                </div>
+            </div>
+            <div class="contact-form-block">
+                <h3>Форма обратной связи</h3>
+                <form onsubmit="handleFormSubmit(event)">
+                    <div class="contact-form-inner">
+                        <div class="form-group"><label>Имя *</label><input type="text" placeholder="Иван Петров" required></div>
+                        <div class="form-group"><label>Телефон *</label><input type="tel" placeholder="+7 (___) ___-__-__" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" placeholder="example@mail.ru"></div>
+                        <div class="form-group"><label>Тема</label><select><option>Вопрос по услугам</option><option>Расчёт стоимости</option><option>Сотрудничество</option><option>Другое</option></select></div>
+                        <div class="form-group full-width"><label>Сообщение</label><textarea placeholder="Ваш вопрос..."></textarea></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="font-size:15px;padding:14px 32px;margin-top:8px;">Отправить сообщение</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="footer-logo-text">Строй<span>Мастер</span></div>
+                <p class="footer-desc">Профессиональное строительство и ремонт под ключ с 2014 года.</p>
+                <div class="social-links">
+                    <div class="social-link">VK</div>
+                    <div class="social-link">TG</div>
+                    <div class="social-link">WA</div>
+                    <div class="social-link">YT</div>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Навигация</h4>
+                <a onclick="showPage('home')">Главная</a>
+                <a onclick="showPage('catalog')">Каталог товаров</a>
+                <a onclick="showPage('services')">Услуги</a>
+                <a onclick="showPage('about')">О компании</a>
+                <a onclick="showPage('contacts')">Контакты</a>
+            </div>
+            <div class="footer-col">
+                <h4>Услуги</h4>
+                <a onclick="showServiceDetail('Строительство домов')">Строительство домов</a>
+                <a onclick="showServiceDetail('Ремонт квартир')">Ремонт квартир</a>
+                <a onclick="showServiceDetail('Отделочные работы')">Отделочные работы</a>
+                <a onclick="showServiceDetail('Проектирование')">Проектирование</a>
+                <a onclick="showServiceDetail('Монтаж кровли')">Монтаж кровли</a>
+                <a onclick="showServiceDetail('Фасадные работы')">Фасадные работы</a>
+            </div>
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <p>📍 г. Москва, ул. Строителей, д. 12</p>
+                <p>📞 +7 (495) 123-45-67</p>
+                <p>✉️ info@stroymaster.ru</p>
+                <p>🕐 Пн–Пт: 9:00–19:00</p>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="footer-bottom">
+            <span>© 2024 СтройМастер. Все права защищены.</span>
+            <span>Политика конфиденциальности</span>
+        </div>
+    </div>
+</footer>
+
+<!-- FLOATING CHAT BUTTON -->
+<button class="chat-float-btn" onclick="openChatBot()" id="chatFloatBtn">
+    <span class="chat-float-icon">💬</span>
+    <span>Консультант</span>
+    <span class="chat-float-dot"></span>
+</button>
+
+<!-- CHAT WINDOW -->
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <div class="chat-avatar">👷</div>
+        <div class="chat-header-info">
+            <div class="chat-header-name">Онлайн-консультант</div>
+            <div class="chat-header-status"><span class="chat-status-dot"></span><span>Ответим за 5 минут</span></div>
+        </div>
+        <button class="chat-close-btn" onclick="closeChatBot()">✕</button>
+    </div>
+    <div class="ws-status-bar ws-connecting" id="wsStatusBar">
+        <span class="ws-dot"></span>
+        <span id="wsStatusText">Подключение к серверу...</span>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-footer" id="chatFooter">
+        <div class="chat-options" id="chatOptions"></div>
+    </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification">
+    <strong>✓ Заявка отправлена!</strong>
+    <p>Мы свяжемся с вами в ближайшее время.</p>
+</div>
+
+<script>
+// ================================================
+//  НАВИГАЦИЯ ПО СТРАНИЦАМ
+// ================================================
+const pages    = ['home','catalog','product-detail','services','service-detail','about','contacts'];
+const navItems = ['home','catalog','services','about','contacts'];
+
+function showPage(pageId) {
+    pages.forEach(p => {
+        const el = document.getElementById('page-' + p);
+        if (el) el.classList.remove('active');
+    });
+    const target = document.getElementById('page-' + pageId);
+    if (target) target.classList.add('active');
+    navItems.forEach(n => {
+        const btn = document.getElementById('nav-' + n);
+        if (btn) btn.classList.remove('active');
+    });
+    const activeNav = document.getElementById('nav-' + pageId);
+    if (activeNav) activeNav.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showProductDetail() { showPage('product-detail'); }
+
+function showServiceDetail(name) {
+    document.getElementById('service-detail-title').textContent = name;
+    document.getElementById('service-detail-breadcrumb').textContent = name;
+    showPage('service-detail');
+    navItems.forEach(n => {
+        const btn = document.getElementById('nav-' + n);
+        if (btn) btn.classList.remove('active');
+    });
+    document.getElementById('nav-services').classList.add('active');
+}
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+    showNotification();
+    e.target.reset();
+}
+
+function showNotification() {
+    const n = document.getElementById('notification');
+    n.classList.add('show');
+    setTimeout(() => n.classList.remove('show'), 4000);
+}
+
+// ================================================
+//  WEBSOCKET — ПОДКЛЮЧЕНИЕ К PYTHON СЕРВЕРУ
+// ================================================
+let ws             = null;
+let wsReady        = false;
+let chatOpen       = false;
+let chatInit       = false;
+let currentStep    = 'start';
+let userAnswers    = {};
+let reconnectTimer = null;
+let reconnectCount = 0;
+
+// ✅ ВАЖНОЕ ИЗМЕНЕНИЕ — автоматически определяем адрес сервера
+function getWsUrl() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname || 'localhost';
+    // Python WebSocket сервер работает на порту 8765
+    return `${protocol}//${hostname}:8765`;
+}
+
+function connectWebSocket() {
+    const statusBar  = document.getElementById('wsStatusBar');
+    const statusText = document.getElementById('wsStatusText');
+
+    statusBar.className = 'ws-status-bar ws-connecting';
+    statusText.textContent = 'Подключение к серверу...';
+
+    try {
+        ws = new WebSocket(getWsUrl());
+    } catch(e) {
+        statusBar.className = 'ws-status-bar ws-error';
+        statusText.textContent = '❌ Ошибка подключения';
+        scheduleReconnect();
+        return;
+    }
+
+    ws.onopen = function() {
+        wsReady        = true;
+        reconnectCount = 0;
+        statusBar.className  = 'ws-status-bar';
+        statusText.textContent = '🟢 WebSocket подключён — соединение активно';
+
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+
+        // Запускаем чат после подключения
+        setTimeout(() => showStep('start'), 300);
+    };
+
+    ws.onmessage = function(event) {
+        let data;
+        try { data = JSON.parse(event.data); }
+        catch(e) { return; }
+
+        if (data.type === 'form_result') {
+            if (data.success) showSuccess(data.applicationId);
+            else showError(data.error);
+        }
+        if (data.type === 'pong') {
+            console.log('🏓 Pong получен от сервера');
+        }
+    };
+
+    ws.onclose = function() {
+        wsReady = false;
+        const statusBar  = document.getElementById('wsStatusBar');
+        const statusText = document.getElementById('wsStatusText');
+        statusBar.className  = 'ws-status-bar ws-error';
+        statusText.textContent = '🔴 Соединение разорвано. Переподключение...';
+        scheduleReconnect();
+    };
+
+    ws.onerror = function() {
+        wsReady = false;
+        const statusBar  = document.getElementById('wsStatusBar');
+        const statusText = document.getElementById('wsStatusText');
+        statusBar.className  = 'ws-status-bar ws-error';
+        statusText.textContent = '❌ Ошибка соединения';
+    };
+}
+
+function scheduleReconnect() {
+    if (reconnectTimer) return;
+    reconnectCount++;
+    const delay = Math.min(3000 * reconnectCount, 15000);
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connectWebSocket();
+    }, delay);
+}
+
+// Ping каждые 25 секунд чтобы соединение не закрылось
+setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ping' }));
+    }
+}, 25000);
+
+function safeSendWs(data) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(data));
+    }
+}
+
+// ================================================
+//  CHATBOT ОТКРЫТИЕ / ЗАКРЫТИЕ
+// ================================================
+function openChatBot() {
+    chatOpen = true;
+    document.getElementById('chatWindow').classList.add('open');
+    document.getElementById('chatFloatBtn').style.display = 'none';
+
+    if (!chatInit) {
+        chatInit = true;
+        connectWebSocket();
+    }
+}
+
+function closeChatBot() {
+    chatOpen = false;
+    document.getElementById('chatWindow').classList.remove('open');
+    document.getElementById('chatFloatBtn').style.display = 'flex';
+}
+
+// ================================================
+//  СЦЕНАРИЙ ЧАТ-БОТА
+// ================================================
+const scenario = {
+    start: {
+        msg: 'Здравствуйте! 👋\nЯ помогу подобрать услугу или товар и передам заявку специалисту.\n\nЧто вас интересует?',
+        options: [
+            { label: '🏠 Строительство дома',           next: 'build_1' },
+            { label: '🔨 Ремонт квартиры',              next: 'repair_1' },
+            { label: '🎨 Отделочные работы',            next: 'finish_1' },
+            { label: '🏢 Коммерческое строительство',   next: 'commercial_1' },
+            { label: '📐 Проектирование',               next: 'project_1' },
+            { label: '🏗️ Кровельные работы',            next: 'roof_1' },
+            { label: '🧱 Фасадные работы',              next: 'facade_1' },
+            { label: '📦 Строительные материалы',       next: 'materials_1' },
+            { label: '📞 Связаться со специалистом',    next: 'specialist_1' },
+        ]
+    },
+    // ВЕТКА 1 — Строительство дома
+    build_1: { msg: 'Какой дом вы хотите построить?', options: [{ label:'🧱 Кирпичный дом',next:'build_2'},{ label:'⬜ Дом из газобетона',next:'build_2'},{ label:'🪵 Каркасный дом',next:'build_2'},{ label:'🌲 Дом из бруса',next:'build_2'},{ label:'❓ Нужна консультация',next:'build_2'}] },
+    build_2: { msg: 'Какая примерная площадь дома?', options: [{ label:'До 100 м²',next:'build_3'},{ label:'100–150 м²',next:'build_3'},{ label:'150–250 м²',next:'build_3'},{ label:'Более 250 м²',next:'build_3'},{ label:'Пока не определился',next:'build_3'}] },
+    build_3: { msg: 'На каком этапе сейчас проект?', options: [{ label:'💡 Есть только идея',next:'build_4'},{ label:'🌿 Есть участок',next:'build_4'},{ label:'📄 Есть проект',next:'build_4'},{ label:'🔨 Уже начато строительство',next:'build_4'},{ label:'🔑 Строительство под ключ',next:'build_4'}] },
+    build_4: { msg: 'Какой ориентировочный бюджет?', options: [{ label:'До 3 млн ₽',next:'build_5'},{ label:'3–5 млн ₽',next:'build_5'},{ label:'5–10 млн ₽',next:'build_5'},{ label:'Более 10 млн ₽',next:'build_5'},{ label:'Пока не определился',next:'build_5'}] },
+    build_5: { msg: 'Когда планируете начать строительство?', options: [{ label:'📅 В ближайший месяц',next:'build_final'},{ label:'Через 1–3 месяца',next:'build_final'},{ label:'Через 3–6 месяцев',next:'build_final'},{ label:'Позже',next:'build_final'},{ label:'💬 Просто узнаю стоимость',next:'build_final'}] },
+    build_final: { msg: 'Отлично! Мы подготовим консультацию по строительству дома.\n\nОставьте контакты, и специалист свяжется с вами 👇', options: [], form: true },
+
+    // ВЕТКА 2 — Ремонт квартиры
+    repair_1: { msg: 'Какой ремонт вам нужен?', options: [{ label:'🖌️ Косметический ремонт',next:'repair_2'},{ label:'🔨 Капитальный ремонт',next:'repair_2'},{ label:'🔑 Ремонт под ключ',next:'repair_2'},{ label:'✨ Дизайнерский ремонт',next:'repair_2'},{ label:'🔍 Нужно оценить квартиру',next:'repair_2'}] },
+    repair_2: { msg: 'Какая у вас квартира?', options: [{ label:'Студия',next:'repair_3'},{ label:'1-комнатная',next:'repair_3'},{ label:'2-комнатная',next:'repair_3'},{ label:'3-комнатная',next:'repair_3'},{ label:'Более 3 комнат',next:'repair_3'}] },
+    repair_3: { msg: 'Какая примерная площадь квартиры?', options: [{ label:'До 30 м²',next:'repair_4'},{ label:'30–50 м²',next:'repair_4'},{ label:'50–80 м²',next:'repair_4'},{ label:'80–120 м²',next:'repair_4'},{ label:'Более 120 м²',next:'repair_4'}] },
+    repair_4: { msg: 'В каком состоянии квартира?', options: [{ label:'🏢 Новостройка без отделки',next:'repair_5'},{ label:'🏗️ Черновая отделка',next:'repair_5'},{ label:'🏠 Вторичное жильё',next:'repair_5'},{ label:'🔧 Нужно всё демонтировать',next:'repair_5'},{ label:'❓ Нужна консультация',next:'repair_5'}] },
+    repair_5: { msg: 'Когда планируете начать ремонт?', options: [{ label:'⚡ Срочно',next:'repair_final'},{ label:'В течение месяца',next:'repair_final'},{ label:'Через 1–3 месяца',next:'repair_final'},{ label:'Позже',next:'repair_final'},{ label:'💬 Сравниваю цены',next:'repair_final'}] },
+    repair_final: { msg: 'Понял! Мы рассчитаем стоимость ремонта и свяжемся с вами.\n\nОставьте ваши контакты 👇', options: [], form: true },
+
+    // ВЕТКА 3 — Отделочные работы
+    finish_1: { msg: 'Какие отделочные работы вас интересуют?', options: [{ label:'🪣 Штукатурка и шпаклёвка',next:'finish_2'},{ label:'🖌️ Покраска стен',next:'finish_2'},{ label:'🟦 Укладка плитки',next:'finish_2'},{ label:'🪵 Монтаж полов',next:'finish_2'},{ label:'📰 Поклейка обоев',next:'finish_2'},{ label:'✨ Комплексная отделка',next:'finish_2'}] },
+    finish_2: { msg: 'Где нужно выполнить отделку?', options: [{ label:'🏠 Квартира',next:'finish_3'},{ label:'🏡 Частный дом',next:'finish_3'},{ label:'🏢 Офис',next:'finish_3'},{ label:'🏪 Магазин / помещение',next:'finish_3'},{ label:'❓ Другое',next:'finish_3'}] },
+    finish_3: { msg: 'Какой примерный объём работ?', options: [{ label:'Одна комната',next:'finish_4'},{ label:'Несколько комнат',next:'finish_4'},{ label:'Вся квартира / дом',next:'finish_4'},{ label:'Коммерческое помещение',next:'finish_4'},{ label:'Пока не знаю',next:'finish_4'}] },
+    finish_4: { msg: 'Материалы уже куплены?', options: [{ label:'✅ Да, есть',next:'finish_5'},{ label:'🛒 Нет, нужны',next:'finish_5'},{ label:'❓ Нужна помощь',next:'finish_5'},{ label:'💰 Узнать стоимость с материалами',next:'finish_5'}] },
+    finish_5: { msg: 'Когда нужно начать работы?', options: [{ label:'⚡ Как можно скорее',next:'finish_final'},{ label:'В течение месяца',next:'finish_final'},{ label:'Через 1–3 месяца',next:'finish_final'},{ label:'Позже',next:'finish_final'}] },
+    finish_final: { msg: 'Отлично! Передадим информацию мастеру.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 4 — Коммерческое строительство
+    commercial_1: { msg: 'Какой коммерческий объект планируется?', options: [{ label:'🏢 Офисное здание',next:'commercial_2'},{ label:'🏭 Склад',next:'commercial_2'},{ label:'🏪 Магазин',next:'commercial_2'},{ label:'⚙️ Производственное помещение',next:'commercial_2'},{ label:'❓ Другое',next:'commercial_2'}] },
+    commercial_2: { msg: 'Какие работы требуются?', options: [{ label:'🏗️ Строительство с нуля',next:'commercial_3'},{ label:'🔄 Реконструкция',next:'commercial_3'},{ label:'🔨 Ремонт помещения',next:'commercial_3'},{ label:'🎨 Отделка помещения',next:'commercial_3'},{ label:'📐 Проектирование',next:'commercial_3'}] },
+    commercial_3: { msg: 'Какая примерная площадь объекта?', options: [{ label:'До 100 м²',next:'commercial_4'},{ label:'100–300 м²',next:'commercial_4'},{ label:'300–1000 м²',next:'commercial_4'},{ label:'Более 1000 м²',next:'commercial_4'},{ label:'Пока неизвестно',next:'commercial_4'}] },
+    commercial_4: { msg: 'Есть ли проектная документация?', options: [{ label:'✅ Да, проект есть',next:'commercial_5'},{ label:'⚙️ Проект в разработке',next:'commercial_5'},{ label:'❌ Проекта нет',next:'commercial_5'},{ label:'📐 Нужна помощь',next:'commercial_5'}] },
+    commercial_5: { msg: 'Когда планируете начать работы?', options: [{ label:'⚡ Срочно',next:'commercial_final'},{ label:'В течение месяца',next:'commercial_final'},{ label:'Через 1–3 месяца',next:'commercial_final'},{ label:'Позже',next:'commercial_final'},{ label:'💬 Собираем предложения',next:'commercial_final'}] },
+    commercial_final: { msg: 'Спасибо! Специалист уточнит детали лично.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 5 — Проектирование
+    project_1: { msg: 'Какой проект вам нужен?', options: [{ label:'🏠 Проект частного дома',next:'project_2'},{ label:'🏢 Проект коммерческого объекта',next:'project_2'},{ label:'✨ Дизайн-проект интерьера',next:'project_2'},{ label:'📋 Проект перепланировки',next:'project_2'},{ label:'❓ Нужна консультация',next:'project_2'}] },
+    project_2: { msg: 'На каком этапе вы сейчас?', options: [{ label:'💡 Есть только идея',next:'project_3'},{ label:'🌿 Есть участок / помещение',next:'project_3'},{ label:'✏️ Есть эскиз',next:'project_3'},{ label:'📄 Нужно доработать проект',next:'project_3'},{ label:'❓ Не знаю с чего начать',next:'project_3'}] },
+    project_3: { msg: 'Какая примерная площадь объекта?', options: [{ label:'До 100 м²',next:'project_4'},{ label:'100–200 м²',next:'project_4'},{ label:'200–500 м²',next:'project_4'},{ label:'Более 500 м²',next:'project_4'},{ label:'Пока неизвестно',next:'project_4'}] },
+    project_4: { msg: 'Когда нужен готовый проект?', options: [{ label:'⚡ Как можно быстрее',next:'project_final'},{ label:'В течение месяца',next:'project_final'},{ label:'Через 1–3 месяца',next:'project_final'},{ label:'🕐 Сроки не важны',next:'project_final'}] },
+    project_final: { msg: 'Хорошо! Специалист свяжется с вами.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 6 — Кровельные работы
+    roof_1: { msg: 'Какие кровельные работы вам нужны?', options: [{ label:'🏗️ Монтаж новой кровли',next:'roof_2'},{ label:'🔧 Ремонт кровли',next:'roof_2'},{ label:'🔄 Замена покрытия',next:'roof_2'},{ label:'🌡️ Утепление крыши',next:'roof_2'},{ label:'🌧️ Водосточная система',next:'roof_2'}] },
+    roof_2: { msg: 'Для какого объекта нужна кровля?', options: [{ label:'🏠 Частный дом',next:'roof_3'},{ label:'🏡 Дача',next:'roof_3'},{ label:'🚗 Гараж',next:'roof_3'},{ label:'🏢 Коммерческое здание',next:'roof_3'},{ label:'❓ Другое',next:'roof_3'}] },
+    roof_3: { msg: 'Какой материал планируете?', options: [{ label:'🏗️ Металлочерепица',next:'roof_4'},{ label:'📐 Профнастил',next:'roof_4'},{ label:'⬛ Мягкая кровля',next:'roof_4'},{ label:'🏛️ Керамическая черепица',next:'roof_4'},{ label:'❓ Пока не выбрал',next:'roof_4'}] },
+    roof_4: { msg: 'Какая примерная площадь крыши?', options: [{ label:'До 50 м²',next:'roof_5'},{ label:'50–100 м²',next:'roof_5'},{ label:'100–200 м²',next:'roof_5'},{ label:'Более 200 м²',next:'roof_5'},{ label:'Не знаю',next:'roof_5'}] },
+    roof_5: { msg: 'Когда нужно выполнить работы?', options: [{ label:'⚡ Срочно',next:'roof_final'},{ label:'В течение месяца',next:'roof_final'},{ label:'Через 1–3 месяца',next:'roof_final'},{ label:'Позже',next:'roof_final'}] },
+    roof_final: { msg: 'Принято! Передадим заявку специалисту.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 7 — Фасадные работы
+    facade_1: { msg: 'Какие фасадные работы вас интересуют?', options: [{ label:'🌡️ Утепление фасада',next:'facade_2'},{ label:'🪣 Штукатурка фасада',next:'facade_2'},{ label:'🖌️ Покраска фасада',next:'facade_2'},{ label:'🪟 Облицовка фасада',next:'facade_2'},{ label:'🔧 Ремонт фасада',next:'facade_2'},{ label:'✨ Комплексные работы',next:'facade_2'}] },
+    facade_2: { msg: 'Для какого объекта нужны работы?', options: [{ label:'🏠 Частный дом',next:'facade_3'},{ label:'🏡 Коттедж',next:'facade_3'},{ label:'🏘️ Многоквартирный дом',next:'facade_3'},{ label:'🏢 Коммерческое здание',next:'facade_3'},{ label:'❓ Другое',next:'facade_3'}] },
+    facade_3: { msg: 'Какая примерная площадь фасада?', options: [{ label:'До 100 м²',next:'facade_4'},{ label:'100–200 м²',next:'facade_4'},{ label:'200–500 м²',next:'facade_4'},{ label:'Более 500 м²',next:'facade_4'},{ label:'Не знаю',next:'facade_4'}] },
+    facade_4: { msg: 'Материалы уже выбраны?', options: [{ label:'✅ Да',next:'facade_5'},{ label:'❓ Нет, нужна помощь',next:'facade_5'},{ label:'💰 Нужен расчёт с материалами',next:'facade_5'},{ label:'🔧 Только монтаж',next:'facade_5'}] },
+    facade_5: { msg: 'Когда планируете начать работы?', options: [{ label:'⚡ В ближайшее время',next:'facade_final'},{ label:'В течение месяца',next:'facade_final'},{ label:'Через 1–3 месяца',next:'facade_final'},{ label:'Позже',next:'facade_final'}] },
+    facade_final: { msg: 'Отлично! Специалист рассчитает стоимость.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 8 — Строительные материалы
+    materials_1: { msg: 'Какие строительные материалы вас интересуют?', options: [{ label:'🧱 Кирпич / блоки',next:'materials_2'},{ label:'🪣 Цемент / смеси',next:'materials_2'},{ label:'🪵 Пиломатериалы',next:'materials_2'},{ label:'🏗️ Кровельные материалы',next:'materials_2'},{ label:'🏢 Фасадные материалы',next:'materials_2'},{ label:'🎨 Отделочные материалы',next:'materials_2'},{ label:'❓ Другое',next:'materials_2'}] },
+    materials_2: { msg: 'Для чего нужны материалы?', options: [{ label:'🏠 Строительство дома',next:'materials_3'},{ label:'🔨 Ремонт квартиры',next:'materials_3'},{ label:'🎨 Отделка',next:'materials_3'},{ label:'🏗️ Кровля',next:'materials_3'},{ label:'🏢 Коммерческий объект',next:'materials_3'}] },
+    materials_3: { msg: 'Какой объём материалов нужен?', options: [{ label:'📦 Небольшой объём',next:'materials_4'},{ label:'📦📦 Средний объём',next:'materials_4'},{ label:'🚛 Крупная партия',next:'materials_4'},{ label:'📐 Расчёт по проекту',next:'materials_4'},{ label:'Пока не знаю',next:'materials_4'}] },
+    materials_4: { msg: 'Нужна ли доставка?', options: [{ label:'🚛 Да, нужна доставка',next:'materials_5'},{ label:'🚗 Нет, заберу сам',next:'materials_5'},{ label:'❓ Нужно уточнить',next:'materials_5'},{ label:'Пока не знаю',next:'materials_5'}] },
+    materials_5: { msg: 'Когда планируете приобрести материалы?', options: [{ label:'⚡ Сегодня / завтра',next:'materials_final'},{ label:'В течение недели',next:'materials_final'},{ label:'В течение месяца',next:'materials_final'},{ label:'Позже',next:'materials_final'},{ label:'💬 Просто узнаю цены',next:'materials_final'}] },
+    materials_final: { msg: 'Хорошо! Менеджер уточнит наличие и стоимость.\n\nОставьте контакты 👇', options: [], form: true },
+
+    // ВЕТКА 9 — Связаться со специалистом
+    specialist_1: { msg: 'По какому вопросу хотите связаться?', options: [{ label:'💰 Узнать стоимость',next:'specialist_2'},{ label:'💬 Нужна консультация',next:'specialist_2'},{ label:'📏 Вызвать замерщика',next:'specialist_2'},{ label:'📐 Обсудить проект',next:'specialist_2'},{ label:'❓ Другой вопрос',next:'specialist_2'}] },
+    specialist_2: { msg: 'Когда вам удобно связаться?', options: [{ label:'⚡ Как можно скорее',next:'specialist_final'},{ label:'📅 Сегодня',next:'specialist_final'},{ label:'📅 Завтра',next:'specialist_final'},{ label:'🕐 В рабочее время',next:'specialist_final'},{ label:'🌆 Вечером',next:'specialist_final'}] },
+    specialist_final: { msg: 'Хорошо! Оставьте контакты — специалист свяжется 👇', options: [], form: true }
+};
+
+// ================================================
+//  ДВИЖОК ЧАТ-БОТА
+// ================================================
+function showStep(stepKey) {
+    currentStep = stepKey;
+    const step = scenario[stepKey];
+    if (!step) return;
+
+    showTyping();
+
+    setTimeout(() => {
+        removeTyping();
+        addBotMessage(step.msg);
+
+        const footer    = document.getElementById('chatFooter');
+        const optionsEl = document.getElementById('chatOptions');
+
+        if (step.form) {
+            footer.innerHTML = buildFinalForm();
+        } else if (step.options && step.options.length > 0) {
+            optionsEl.innerHTML = '';
+            step.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className   = 'chat-option-btn';
+                btn.textContent = opt.label;
+                btn.onclick     = () => handleOptionClick(opt.label, opt.next);
+                optionsEl.appendChild(btn);
+            });
+            footer.innerHTML = '';
+            footer.appendChild(optionsEl);
+        }
+    }, 900);
+}
+
+function handleOptionClick(label, nextStep) {
+    addUserMessage(label);
+    userAnswers[currentStep] = label;
+
+    // Отправляем на Python сервер через WebSocket
+    safeSendWs({
+        type:   'user_answer',
+        step:   currentStep,
+        answer: label,
+        timestamp: new Date().toISOString()
+    });
+
+    // Блокируем кнопки
+    document.querySelectorAll('.chat-option-btn').forEach(b => {
+        b.disabled = true;
+    });
+
+    setTimeout(() => showStep(nextStep), 400);
+}
+
+function buildFinalForm() {
+    return `
+        <div class="chat-final-form" id="chatFinalForm">
+            <input class="chat-input" id="cf-name"    type="text" placeholder="Ваше имя *" minlength="2">
+            <input class="chat-input" id="cf-phone"   type="tel"  placeholder="+7 (___) ___-__-__ *">
+            <textarea class="chat-input chat-textarea" id="cf-comment"
+                placeholder="Например: удобное время звонка или адрес объекта"></textarea>
+            <label class="chat-checkbox-row">
+                <input type="checkbox" id="cf-agree">
+                <span>Я согласен на обработку персональных данных</span>
+            </label>
+            <button class="chat-submit-btn" onclick="submitChatForm()">Отправить заявку</button>
+        </div>
+    `;
+}
+
+function submitChatForm() {
+    const nameEl  = document.getElementById('cf-name');
+    const phoneEl = document.getElementById('cf-phone');
+    const agreeEl = document.getElementById('cf-agree');
+    const commentEl = document.getElementById('cf-comment');
+
+    const name    = nameEl.value.trim();
+    const phone   = phoneEl.value.trim();
+    const agree   = agreeEl.checked;
+    const comment = commentEl.value.trim();
+
+    // Валидация
+    nameEl.classList.remove('error');
+    phoneEl.classList.remove('error');
+
+    if (name.length < 2) {
+        nameEl.classList.add('error');
+        nameEl.focus();
+        return;
+    }
+    if (phone.replace(/\D/g,'').length < 10) {
+        phoneEl.classList.add('error');
+        phoneEl.focus();
+        return;
+    }
+    if (!agree) {
+        alert('Пожалуйста, дайте согласие на обработку персональных данных');
+        return;
+    }
+
+    const btn = document.querySelector('.chat-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Отправка...'; }
+
+    addUserMessage(`📋 Заявка:\nИмя: ${name}\nТел: ${phone}${comment ? '\nКомментарий: ' + comment : ''}`);
+
+    // Отправляем на Python сервер
+    safeSendWs({
+        type:      'submit_form',
+        name,
+        phone,
+        comment,
+        answers:   userAnswers,
+        timestamp: new Date().toISOString()
+    });
+
+    // Если WS не подключён — показываем успех локально
+    if (!wsReady) {
+        setTimeout(() => showSuccess(null), 800);
+    }
+}
+
+function showSuccess(appId) {
+    const footer = document.getElementById('chatFooter');
+    addBotMessage('✅ Спасибо! Ваша заявка принята.');
+    footer.innerHTML = `
+        <div class="chat-result">
+            <div class="chat-result-icon">🎉</div>
+            <h3>Заявка отправлена!</h3>
+            <p>Специалист свяжется с вами в ближайшее время.${appId ? '<br><small style="color:#aaa">Номер заявки: #' + appId + '</small>' : ''}</p>
+            <div class="chat-result-btns">
+                <button class="chat-result-btn primary" onclick="closeChatBot()">Вернуться на сайт</button>
+                <button class="chat-result-btn secondary" onclick="resetChat()">Начать заново</button>
+            </div>
+        </div>
+    `;
+}
+
+function showError(errMsg) {
+    const footer = document.getElementById('chatFooter');
+    footer.innerHTML = `
+        <div class="chat-result">
+            <div class="chat-result-icon">❌</div>
+            <h3>Не удалось отправить</h3>
+            <p>${errMsg || 'Попробуйте ещё раз или позвоните нам:'}<br><strong>+7 (495) 123-45-67</strong></p>
+            <div class="chat-result-btns">
+                <button class="chat-result-btn primary"   onclick="retryForm()">Повторить</button>
+                <button class="chat-result-btn secondary" onclick="resetChat()">Начать заново</button>
+            </div>
+        </div>
+    `;
+}
+
+function retryForm() {
+    document.getElementById('chatFooter').innerHTML = buildFinalForm();
+}
+
+function resetChat() {
+    userAnswers = {};
+    currentStep = 'start';
+    document.getElementById('chatMessages').innerHTML = '';
+    showStep('start');
+}
+
+// ================================================
+//  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ================================================
+function addBotMessage(text) {
+    const msgs = document.getElementById('chatMessages');
+    const row  = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.innerHTML = `
+        <div class="msg-avatar">🤖</div>
+        <div>
+            <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
+            <div class="msg-time">${getTime()}</div>
+        </div>
+    `;
+    msgs.appendChild(row);
+    scrollMessages();
+}
+
+function addUserMessage(text) {
+    const msgs = document.getElementById('chatMessages');
+    const row  = document.createElement('div');
+    row.className = 'msg-row user';
+    row.innerHTML = `
+        <div>
+            <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
+            <div class="msg-time">${getTime()}</div>
+        </div>
+    `;
+    msgs.appendChild(row);
+    scrollMessages();
+}
+
+function showTyping() {
+    const msgs = document.getElementById('chatMessages');
+    const row  = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id        = 'typingRow';
+    row.innerHTML = `
+        <div class="msg-avatar">🤖</div>
+        <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    `;
+    msgs.appendChild(row);
+    scrollMessages();
+}
+
+function removeTyping() {
+    const el = document.getElementById('typingRow');
+    if (el) el.remove();
+}
+
+function scrollMessages() {
+    const msgs = document.getElementById('chatMessages');
+    setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+}
+
+function getTime() {
+    const now = new Date();
+    return now.getHours().toString().padStart(2, '0') + ':' +
+           now.getMinutes().toString().padStart(2, '0');
+}
+</script>
+</body>
+</html>

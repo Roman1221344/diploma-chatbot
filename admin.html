@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | СтройМастер</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Montserrat', sans-serif; background: #f0f2f5; color: #222; min-height: 100vh; }
+
+        /* HEADER */
+        .header { background: linear-gradient(135deg, #1a1a1a, #2d2d2d); padding: 16px 30px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { color: #fff; font-size: 18px; font-weight: 800; }
+        .header h1 span { color: #E85D04; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .back-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+        .online-badge { background: #22c55e; color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .online-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+
+        /* CONTAINER */
+        .container { max-width: 1280px; margin: 0 auto; padding: 30px 20px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; border-radius: 12px; padding: 24px 20px; border-left: 4px solid #E85D04; box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-num { font-size: 40px; font-weight: 800; color: #E85D04; line-height: 1; margin-bottom: 6px; }
+        .stat-label { font-size: 13px; color: #666; font-weight: 500; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #fff; padding: 6px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); width: fit-content; }
+        .tab-btn { padding: 10px 22px; border: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
+        .tab-btn.active { background: #E85D04; color: #fff; }
+        .tab-btn:hover:not(.active) { background: #fff4ee; color: #E85D04; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* TABLE CARD */
+        .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+        .table-toolbar { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
+        .table-toolbar h3 { font-size: 16px; font-weight: 700; color: #222; }
+        .refresh-btn { padding: 8px 18px; background: #E85D04; color: #fff; border: none; border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 6px; }
+        .refresh-btn:hover { background: #c94d00; }
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        thead th { background: #f8f9fa; padding: 13px 16px; text-align: left; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
+        tbody td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #fffaf7; }
+
+        /* BADGES */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .badge-green  { background: #dcfce7; color: #15803d; }
+        .badge-orange { background: #fff4ee; color: #E85D04; }
+        .badge-gray   { background: #f3f4f6; color: #666; }
+        .badge-blue   { background: #eff6ff; color: #1d4ed8; }
+
+        /* BUTTONS */
+        .detail-btn { padding: 6px 14px; background: #E85D04; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+        .detail-btn:hover { background: #c94d00; }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+        .empty-icon { font-size: 52px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* LOADING */
+        .loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+        /* MODAL */
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-bg.open { display: flex; }
+        .modal { background: #fff; border-radius: 14px; padding: 0; max-width: 640px; width: 100%; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 24px 28px 16px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: flex-start; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; color: #222; }
+        .modal-close { background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+        .modal-close:hover { background: #e5e7eb; }
+        .modal-body { padding: 24px 28px; overflow-y: auto; }
+
+        /* MODAL CONTENT */
+        .modal-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .modal-info-item label { display: block; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .modal-info-item span { font-size: 15px; font-weight: 600; color: #222; }
+        .modal-info-item a { color: #E85D04; text-decoration: none; }
+        .modal-comment { background: #f8f9fa; border-radius: 8px; padding: 14px; margin-bottom: 20px; font-size: 14px; color: #444; line-height: 1.6; }
+        .modal-answers h4 { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .answers-list { list-style: none; }
+        .answers-list li { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .answers-list li:last-child { border-bottom: none; }
+        .answer-step { font-size: 11px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+        .answer-val { font-size: 14px; font-weight: 600; color: #222; }
+
+        /* BRANCHES CHART */
+        .branch-bar-wrap { margin-bottom: 12px; }
+        .branch-bar-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+        .branch-bar-label span:first-child { color: #222; font-weight: 500; }
+        .branch-bar-label span:last-child { color: #E85D04; font-weight: 700; }
+        .branch-bar-bg { background: #f0f0f0; border-radius: 4px; height: 8px; overflow: hidden; }
+        .branch-bar-fill { background: linear-gradient(90deg, #E85D04, #c94d00); border-radius: 4px; height: 100%; transition: width 0.6s ease; }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .tabs { flex-wrap: wrap; width: 100%; }
+            .modal-info-grid { grid-template-columns: 1fr; }
+            .header { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-left">
+        <h1>Строй<span>Мастер</span> — Панель администратора</h1>
+    </div>
+    <div class="header-right">
+        <a href="/" class="back-btn">← На сайт</a>
+        <div class="online-badge">
+            <span class="online-dot"></span>
+            <span id="onlineText">0 онлайн</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-num" id="statTotal">—</div>
+            <div class="stat-label">📋 Всего заявок</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="statToday">—</div>
+            <div class="stat-label">📅 Заявок сегодня</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="statSessions">—</div>
+            <div class="stat-label">💬 Всего сессий</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" id="statOnline">—</div>
+            <div class="stat-label">🟢 Сейчас онлайн</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('applications', this)">📋 Заявки</button>
+        <button class="tab-btn"        onclick="switchTab('sessions', this)">💬 Сессии</button>
+        <button class="tab-btn"        onclick="switchTab('branches', this)">📊 По веткам</button>
+        <button class="tab-btn"        onclick="switchTab('online', this)">🟢 Онлайн</button>
+    </div>
+
+    <!-- TAB: APPLICATIONS -->
+    <div id="tab-applications" class="tab-content active">
+        <div class="table-card">
+            <div class="table-toolbar">
+                <h3>Список заявок</h3>
+                <button class="refresh-btn" onclick="loadApplications()">🔄 Обновить</button>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Имя</th>
+                            <th>Телефон</th>
+                            <th>Тема обращения</th>
+                            <th>Комментарий</th>
+                            <th>IP адрес</th>
+                            <th>Дата</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appsTbody">
+                        <tr><td colspan="8"><div class="loading">⏳ Загрузка данных...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: SESSIONS -->
+    <div id="tab-sessions" class="tab-content">
+        <div class="table-card">
+            <div class="table-toolbar">
+                <h3>Сессии пользователей</h3>
+                <button class="refresh-btn" onclick="loadSessions()">🔄 Обновить</button>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Session ID</th>
+                            <th>IP адрес</th>
+                            <th>Начало</th>
+                            <th>Завершение</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionsTbody">
+                        <tr><td colspan="6"><div class="loading">⏳ Загрузка данных...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: BRANCHES -->
+    <div id="tab-branches" class="tab-content">
+        <div class="table-card">
+            <div class="table-toolbar">
+                <h3>Статистика по темам обращений</h3>
+                <button class="refresh-btn" onclick="loadStats()">🔄 Обновить</button>
+            </div>
+            <div style="padding: 24px;" id="branchesContent">
+                <div class="loading">⏳ Загрузка данных...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: ONLINE -->
+    <div id="tab-online" class="tab-content">
+        <div class="table-card">
+            <div class="table-toolbar">
+                <h3>Пользователи онлайн прямо сейчас</h3>
+                <button class="refresh-btn" onclick="loadOnline()">🔄 Обновить</button>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>IP адрес</th>
+                            <th>Подключился</th>
+                            <th>Ветка диалога</th>
+                        </tr>
+                    </thead>
+                    <tbody id="onlineTbody">
+                        <tr><td colspan="4"><div class="loading">⏳ Загрузка...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="handleModalClick(event)">
+    <div class="modal" id="modalEl">
+        <div class="modal-header">
+            <h3 id="modalTitle">Детали заявки</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    // ================================================
+    //  УТИЛИТЫ
+    // ================================================
+    function formatDate(str) {
+        if (!str) return '—';
+        const d = new Date(str);
+        if (isNaN(d)) return str;
+        return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' })
+             + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function truncate(str, len = 40) {
+        if (!str) return '—';
+        return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+
+    async function fetchApi(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    function showTableError(tbodyId, cols, msg) {
+        document.getElementById(tbodyId).innerHTML =
+            `<tr><td colspan="${cols}"><div class="empty-state"><div class="empty-icon">❌</div><p>${msg}</p></div></td></tr>`;
+    }
+
+    // ================================================
+    //  ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // ================================================
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
+        if (name === 'applications') loadApplications();
+        if (name === 'sessions')     loadSessions();
+        if (name === 'branches')     loadStats();
+        if (name === 'online')       loadOnline();
+    }
+
+    // ================================================
+    //  ЗАГРУЗКА ЗАЯВОК
+    // ================================================
+    async function loadApplications() {
+        const tbody = document.getElementById('appsTbody');
+        tbody.innerHTML = '<tr><td colspan="8"><div class="loading">⏳ Загрузка...</div></td></tr>';
+
+        try {
+            const data = await fetchApi('/api/applications');
+
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><p>Заявок пока нет</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((app, i) => `
+                <tr>
+                    <td><strong>#${app.id}</strong></td>
+                    <td><strong>${app.name}</strong></td>
+                    <td><a href="tel:${app.phone}" style="color:#E85D04;text-decoration:none;">${app.phone}</a></td>
+                    <td><span class="badge badge-orange">${truncate(app.branch || 'Не указана', 30)}</span></td>
+                    <td style="color:#666;">${truncate(app.comment, 35)}</td>
+                    <td style="color:#aaa;font-size:12px;font-family:monospace;">${app.ip_address || '—'}</td>
+                    <td style="color:#666;font-size:13px;white-space:nowrap;">${formatDate(app.created_at)}</td>
+                    <td><button class="detail-btn" onclick="showAppDetail(${app.id})">Открыть</button></td>
+                </tr>
+            `).join('');
+
+        } catch(e) {
+            showTableError('appsTbody', 8, 'Ошибка загрузки. Убедитесь что сервер запущен (python server.py)');
+        }
+    }
+
+    // ================================================
+    //  ДЕТАЛИ ЗАЯВКИ (модальное окно)
+    // ================================================
+    async function showAppDetail(id) {
+        try {
+            const app = await fetchApi(`/api/applications/${id}`);
+            let answers = {};
+            try { answers = JSON.parse(app.answers || '{}'); } catch(e) {}
+
+            document.getElementById('modalTitle').textContent = `Заявка #${app.id} — ${app.name}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="modal-info-grid">
+                    <div class="modal-info-item">
+                        <label>Имя</label>
+                        <span>${app.name}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <label>Телефон</label>
+                        <span><a href="tel:${app.phone}">${app.phone}</a></span>
+                    </div>
+                    <div class="modal-info-item">
+                        <label>Тема обращения</label>
+                        <span>${app.branch || '—'}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <label>IP адрес</label>
+                        <span style="font-family:monospace;font-size:13px;">${app.ip_address || '—'}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <label>Дата и время</label>
+                        <span>${formatDate(app.created_at)}</span>
+                    </div>
+                    <div class="modal-info-item">
+                        <label>ID заявки</label>
+                        <span>#${app.id}</span>
+                    </div>
+                </div>
+
+                ${app.comment ? `
+                    <div class="modal-comment">
+                        <strong style="display:block;margin-bottom:6px;font-size:12px;color:#aaa;text-transform:uppercase;">Комментарий</strong>
+                        ${app.comment}
+                    </div>
+                ` : ''}
+
+                <div class="modal-answers">
+                    <h4>Ответы в диалоге</h4>
+                    ${Object.keys(answers).length ? `
+                        <ul class="answers-list">
+                            ${Object.entries(answers).map(([step, answer]) => `
+                                <li>
+                                    <div class="answer-step">Шаг: ${step}</div>
+                                    <div class="answer-val">${answer}</div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p style="color:#aaa;font-size:14px;">Нет данных об ответах</p>'}
+                </div>
+            `;
+
+            document.getElementById('modalBg').classList.add('open');
+        } catch(e) {
+            alert('Ошибка загрузки данных заявки');
+        }
+    }
+
+    // ================================================
+    //  ЗАГРУЗКА СЕССИЙ
+    // ================================================
+    async function loadSessions() {
+        const tbody = document.getElementById('sessionsTbody');
+        tbody.innerHTML = '<tr><td colspan="6"><div class="loading">⏳ Загрузка...</div></td></tr>';
+
+        try {
+            const data = await fetchApi('/api/sessions');
+
+            if (!data.length) {
+                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><p>Сессий пока нет</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((s, i) => `
+                <tr>
+                    <td><strong>${i + 1}</strong></td>
+                    <td style="font-family:monospace;font-size:12px;color:#666;">${s.session_id ? s.session_id.substring(0, 18) + '...' : '—'}</td>
+                    <td style="font-family:monospace;font-size:12px;">${s.ip_address || '—'}</td>
+                    <td style="font-size:13px;color:#666;">${formatDate(s.started_at)}</td>
+                    <td style="font-size:13px;color:#666;">${s.finished_at ? formatDate(s.finished_at) : '<span style="color:#22c55e;font-weight:600;">Активна</span>'}</td>
+                    <td><span class="badge ${s.status === 'active' ? 'badge-green' : 'badge-gray'}">${s.status === 'active' ? '● Активна' : '✓ Завершена'}</span></td>
+                </tr>
+            `).join('');
+
+        } catch(e) {
+            showTableError('sessionsTbody', 6, 'Ошибка загрузки. Сервер запущен?');
+        }
+    }
+
+    // ================================================
+    //  ЗАГРУЗКА СТАТИСТИКИ ПО ВЕТКАМ
+    // ================================================
+    async function loadStats() {
+        const content = document.getElementById('branchesContent');
+        content.innerHTML = '<div class="loading">⏳ Загрузка...</div>';
+
+        try {
+            const data = await fetchApi('/api/stats');
+
+            // Обновляем карточки
+            document.getElementById('statTotal').textContent    = data.total    || 0;
+            document.getElementById('statToday').textContent    = data.today    || 0;
+            document.getElementById('statSessions').textContent = data.sessions || 0;
+
+            if (!data.branches || !data.branches.length) {
+                content.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>Нет данных для отображения</p></div>';
+                return;
+            }
+
+            const maxCount = Math.max(...data.branches.map(b => b.count));
+
+            content.innerHTML = `
+                <p style="font-size:13px;color:#aaa;margin-bottom:20px;">Всего заявок: <strong style="color:#E85D04;">${data.total}</strong> | Сегодня: <strong style="color:#E85D04;">${data.today}</strong></p>
+                ${data.branches.map(b => `
+                    <div class="branch-bar-wrap">
+                        <div class="branch-bar-label">
+                            <span>${b.branch || 'Не указана'}</span>
+                            <span>${b.count} заявок</span>
+                        </div>
+                        <div class="branch-bar-bg">
+                            <div class="branch-bar-fill" style="width:${Math.round(b.count / maxCount * 100)}%"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+
+        } catch(e) {
+            content.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><p>Ошибка загрузки статистики</p></div>';
+        }
+    }
+
+    // ================================================
+    //  ЗАГРУЗКА ОНЛАЙН ПОЛЬЗОВАТЕЛЕЙ
+    // ================================================
+    async function loadOnline() {
+        const tbody = document.getElementById('onlineTbody');
+
+        try {
+            const data = await fetchApi('/api/online');
+
+            document.getElementById('onlineText').textContent   = `${data.count} онлайн`;
+            document.getElementById('statOnline').textContent   = data.count || 0;
+
+            if (!data.clients || !data.clients.length) {
+                tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">😴</div><p>Нет активных пользователей</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.clients.map(c => `
+                <tr>
+                    <td style="font-family:monospace;font-size:12px;color:#666;">${c.sessionId}</td>
+                    <td style="font-family:monospace;font-size:12px;">${c.ip}</td>
+                    <td style="font-size:13px;color:#666;">${formatDate(c.connectedAt)}</td>
+                    <td>${c.branch ? `<span class="badge badge-orange">${c.branch}</span>` : '<span style="color:#aaa;font-size:13px;">Не начал</span>'}</td>
+                </tr>
+            `).join('');
+
+        } catch(e) {
+            showTableError('onlineTbody', 4, 'Ошибка загрузки. Сервер запущен?');
+        }
+    }
+
+    // ================================================
+    //  МОДАЛЬНОЕ ОКНО
+    // ================================================
+    function handleModalClick(e) {
+        if (e.target === document.getElementById('modalBg')) closeModal();
+    }
+    function closeModal() {
+        document.getElementById('modalBg').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ================================================
+    //  АВТООБНОВЛЕНИЕ
+    // ================================================
+    async function autoRefresh() {
+        try {
+            const data = await fetchApi('/api/stats');
+            document.getElementById('statTotal').textContent    = data.total    || 0;
+            document.getElementById('statToday').textContent    = data.today    || 0;
+            document.getElementById('statSessions').textContent = data.sessions || 0;
+        } catch(e) {}
+
+        try {
+            const online = await fetchApi('/api/online');
+            document.getElementById('onlineText').textContent = `${online.count} онлайн`;
+            document.getElementById('statOnline').textContent = online.count || 0;
+        } catch(e) {
+            document.getElementById('onlineText').textContent = 'offline';
+        }
+    }
+
+    // ================================================
+    //  ИНИЦИАЛИЗАЦИЯ
+    // ================================================
+    loadApplications();
+    loadStats();
+    autoRefresh();
+
+    // Автообновление каждые 15 секунд
+    setInterval(autoRefresh, 15000);
+</script>
+</body>
+</html>
